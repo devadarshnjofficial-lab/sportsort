@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Grouping Results | SportSort</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">
+            <span class="brand-icon">S</span>
+            <span>SportSort</span>
+        </a>
+
+        <a class="back-link" href="/">← New grouping</a>
+    </header>
+
+    <main class="container results-container">
+        <section class="results-hero">
+            <div class="success-icon">✓</div>
+
+            <div class="eyebrow">GROUPING COMPLETE</div>
+
+            <h1>Your groups are <span>ready.</span></h1>
+
+            <p>
+                SportSort has processed your files and generated
+                category-wise Excel workbooks.
+            </p>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">FILES PROCESSED</span>
+                <strong>{{ uploaded_count }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">CATEGORIES</span>
+                <strong>{{ category_count }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">TOTAL STUDENTS</span>
+                <strong>{{ total_students }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">EVENT GROUPS</span>
+                <strong>{{ total_groups }}</strong>
+            </div>
+        </section>
+
+        <section class="results-card">
+            <div class="card-heading">
+                <div>
+                    <h2>Generated workbooks</h2>
+                    <p>Download each category workbook separately.</p>
+                </div>
+
+                <span class="excel-badge">XLSX</span>
+            </div>
+
+            <div class="category-list">
+                {% for item in results %}
+                    <article class="category-item">
+                        <div class="category-file-icon">X</div>
+
+                        <div class="category-details">
+                            <h3>{{ item.filename }}</h3>
+                            <p>
+                                {{ item.students }} students ·
+                                {{ item.events }} events ·
+                                {{ item.groups }} event groups
+                            </p>
+                        </div>
+
+                        <a class="ready-badge"
+                           href="{{ url_for('download', token=item.download_token) }}"
+                           download>
+                            Download ↓
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <p class="download-note">
+                Each button downloads one Excel workbook directly.
+                No ZIP file is created.
+            </p>
+        </section>
+
+        <section class="important-note">
+            <strong>Before using the results</strong>
+            <p>
+                Review the generated workbooks. Every group should contain
+                no more than 8 students, with no school represented twice
+                in the same group.
+            </p>
+        </section>
+
+        <div class="center-action">
+            <a class="secondary-button" href="/">← Upload another set</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        SportSort · Simple, fair, organized.
+    </footer>
+</body>
+</html>

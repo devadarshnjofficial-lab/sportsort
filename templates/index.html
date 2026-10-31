@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SportSort | Student Grouping System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">
+            <span class="brand-icon">S</span>
+            <span>SportSort</span>
+        </a>
+
+        <span class="topbar-label">SPORTS EVENT MANAGEMENT</span>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <div class="eyebrow">
+                <span class="status-dot"></span>
+                SMART STUDENT GROUPING
+            </div>
+
+            <h1>Fair groups.<br><span>Better events.</span></h1>
+
+            <p class="hero-description">
+                Upload your student lists and let SportSort organize
+                participants into balanced groups automatically.
+            </p>
+        </section>
+
+        <section class="upload-card">
+            <div class="card-heading">
+                <div>
+                    <h2>Upload student lists</h2>
+                    <p>Select one or more Excel or CSV files.</p>
+                </div>
+
+                <div class="file-icon" aria-hidden="true">↥</div>
+            </div>
+
+            {% if error %}
+                <div class="alert" role="alert">
+                    <strong>Upload error</strong>
+                    <p>{{ error }}</p>
+                </div>
+            {% endif %}
+
+            <form id="upload-form" action="/" method="POST"
+                  enctype="multipart/form-data">
+
+                <label class="drop-zone" id="drop-zone" for="files">
+                    <span class="upload-symbol">↑</span>
+                    <strong>Drop your files here</strong>
+                    <span class="drop-description">
+                        or <span class="browse-text">browse files</span>
+                    </span>
+                    <span class="file-types">XLSX, XLS or CSV · Up to 50 MB total</span>
+
+                    <input
+                        type="file"
+                        id="files"
+                        name="files"
+                        accept=".xlsx,.xls,.csv"
+                        multiple
+                        required
+                    >
+                </label>
+
+                <div id="selected-files" class="selected-files"
+                     aria-live="polite"></div>
+
+                <div class="rules-panel">
+                    <h3>Grouping rules</h3>
+
+                    <div class="rule">
+                        <span class="rule-check">✓</span>
+                        <span>Maximum <strong>8 students per group</strong></span>
+                    </div>
+
+                    <div class="rule">
+                        <span class="rule-check">✓</span>
+                        <span>No two students from the same school in one group</span>
+                    </div>
+
+                    <div class="rule">
+                        <span class="rule-check">✓</span>
+                        <span>Category detected from the spreadsheet</span>
+                    </div>
+
+                    <div class="rule">
+                        <span class="rule-check">✓</span>
+                        <span>Separate groups for each sports event</span>
+                    </div>
+                </div>
+
+                <div class="format-note">
+                    <strong>Required spreadsheet columns</strong>
+                    <p>
+                        Student Name · Chest Number · School Name ·
+                        Category · Sports Event
+                    </p>
+                    <small>
+                        Extra columns are ignored. Each file must contain
+                        only one category. Files with the same category
+                        are combined.
+                    </small>
+                </div>
+
+                <button type="submit" id="submit-button" class="primary-button">
+                    Generate Groups <span aria-hidden="true">→</span>
+                </button>
+
+                <p class="privacy-note">
+                    Your files are processed by this application to generate
+                    the grouping results.
+                </p>
+            </form>
+        </section>
+
+        <section class="steps">
+            <div class="step">
+                <span class="step-number">01</span>
+                <div>
+                    <h3>Upload</h3>
+                    <p>Select your student lists.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">02</span>
+                <div>
+                    <h3>Organize</h3>
+                    <p>Students are assigned to valid groups.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">03</span>
+                <div>
+                    <h3>Download</h3>
+                    <p>Get your category-wise Excel files.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        SportSort · Simple, fair, organized.
+    </footer>
+
+    <script>
+        const fileInput = document.getElementById("files");
+        const selectedFiles = document.getElementById("selected-files");
+        const dropZone = document.getElementById("drop-zone");
+        const uploadForm = document.getElementById("upload-form");
+        const submitButton = document.getElementById("submit-button");
+
+        function displayFiles(files) {
+            selectedFiles.innerHTML = "";
+
+            if (!files.length) {
+                return;
+            }
+
+            const heading = document.createElement("p");
+            heading.className = "file-list-heading";
+            heading.textContent = `${files.length} file(s) selected`;
+            selectedFiles.appendChild(heading);
+
+            Array.from(files).forEach(file => {
+                const item = document.createElement("div");
+                item.className = "file-item";
+
+                const name = document.createElement("span");
+                name.className = "file-name";
+                name.textContent = file.name;
+
+                const size = document.createElement("span");
+                size.className = "file-size";
+                size.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+
+                item.appendChild(name);
+                item.appendChild(size);
+                selectedFiles.appendChild(item);
+            });
+        }
+
+        fileInput.addEventListener("change", () => {
+            displayFiles(fileInput.files);
+        });
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                dropZone.classList.add("drag-active");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                dropZone.classList.remove("drag-active");
+            });
+        });
+
+        dropZone.addEventListener("drop", event => {
+            const droppedFiles = Array.from(event.dataTransfer.files);
+            const allowedExtensions = [".xlsx", ".xls", ".csv"];
+
+            const validFiles = droppedFiles.filter(file =>
+                allowedExtensions.some(extension =>
+                    file.name.toLowerCase().endsWith(extension)
+                )
+            );
+
+            if (!validFiles.length) {
+                alert("Please drop Excel or CSV files.");
+                return;
+            }
+
+            const transfer = new DataTransfer();
+            validFiles.forEach(file => transfer.items.add(file));
+            fileInput.files = transfer.files;
+
+            displayFiles(fileInput.files);
+        });
+
+        uploadForm.addEventListener("submit", event => {
+            if (!fileInput.files.length) {
+                event.preventDefault();
+                alert("Please select at least one file.");
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Generating groups... Please wait";
+        });
+    </script>
+</body>
+</html>
